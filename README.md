@@ -21,6 +21,48 @@ To enable, add the following to your JupyterHub configuration file:
 c.JupyterHub.spawner_class = 'winlocalprocessspawner.WinLocalProcessSpawner'
 ```
 
+## Windows Auth without token
+jupyterhub_config.py:
+```python
+import sys
+import os
+
+# Add the path to the winlocalprocessspawner
+sys.path.append(r'PATH')
+from winlocalprocessspawner.winlocalprocessspawner import WinLocalProcessSpawner
+
+# JupyterHub configuration
+c.JupyterHub.spawner_class = WinLocalProcessSpawner
+c.JupyterHub.authenticator_class = 'nativeauthenticator.NativeAuthenticator'
+
+# Create a base directory for notebooks
+notebooks_base = r'C:\Users\<user>\JupyterNotebooks'
+if not os.path.exists(notebooks_base):
+    os.makedirs(notebooks_base, exist_ok=True)
+
+# Set the notebook directory
+c.Spawner.notebook_dir = notebooks_base
+
+# Disable user config
+c.Spawner.disable_user_config = True
+
+# Native Authenticator settings
+c.NativeAuthenticator.open_signup = True
+c.NativeAuthenticator.ask_email_on_signup = True
+c.Authenticator.admin_users = {'admin'}
+c.NativeAuthenticator.minimum_password_length = 8
+c.NativeAuthenticator.check_common_password = True
+c.Authenticator.allow_all = True
+
+# Environment variables to help with paths
+import tempfile
+c.Spawner.environment = {
+    'JUPYTER_RUNTIME_DIR': tempfile.gettempdir(),
+    'USERPROFILE': notebooks_base,
+    'APPDATA': os.path.join(notebooks_base, 'AppData'),
+}
+```
+
 ## Requirements
 - Windows operating system
 - JupyterHub >= 1.0.0
